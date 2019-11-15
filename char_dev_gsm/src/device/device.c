@@ -8,15 +8,13 @@
 #include <linux/kdev_t.h>
 
 
-#define GSM_BANK      1
-#define DEV_NAME    "gsm"
-#define CLASS       "gsm-class"
-
 static struct class *gsm_class;
 static struct cdev gsm_dev[GSM_BANK];
-dev_t major;
+static dev_t major;
 unsigned int first_minor = 0;
 int sts_major = -1;
+
+static int gsm_sts;
 
 
 int rt_cdev_add = -1;
@@ -26,12 +24,13 @@ static struct file_operations gsm_dev_fops =
 {
     .owner = THIS_MODULE,
     .read = NULL,
+    .write = NULL,
 };
 
 
-int register_dev(void)
+static int register_dev(void)
 {
-    dev_t cur_dev[GSM_BANK];
+    static dev_t cur_dev[GSM_BANK];
     printk(KERN_NOTICE "GSM: In register_dev().\n");
         /* Get the mazor and minor number */
     sts_major = alloc_chrdev_region(&major,first_minor,GSM_BANK,DEV_NAME);
@@ -58,8 +57,9 @@ int register_dev(void)
             }
             else
             {
-                printk(KERN_INFO "GSM: The device has been added successfully.\n");
+                printk(KERN_INFO "GSM: The device has been added successfully.\n\0");
                 device_create(gsm_class, NULL, cur_dev[i], NULL, DEV_NAME "%d",i);
+                
             }
         }
     }
@@ -71,7 +71,9 @@ void unregister_dev(void)
     printk(KERN_NOTICE "GSM: In unregister_dev().\n");
     if(sts_major == 0)
     {
-        device_destroy();
+        device_destroy(gsm_class,cur_dev[0]);
+        class_destroy(gsm_class);
+        cdev_del();
         unregister_chrdev_region(major,GSM_BANK);
         cdev_del(&gsm_dev[i]);
         printk(KERN_INFO "GSM: The device has ben removed\n");

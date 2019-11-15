@@ -7,6 +7,7 @@
 #include <linux/kernel.h> // Contains types, macros, functions for the kernel
 #include "src/device/device.h"
 
+
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Guruprasad");
 MODULE_DESCRIPTION("A simple driver");

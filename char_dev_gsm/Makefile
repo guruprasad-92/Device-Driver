@@ -2,7 +2,7 @@ TARGET := gsm
 KDIR := /lib/modules/$(shell uname -r)/build/
 obj-m := ${TARGET}.o #Object name should not be match with the main file name 
 # This causes "missing MODULE_LICENSE()" warnig while building the module
-${TARGET}-objs := GSM.o
+${TARGET}-objs := lkm_gsm
 include ${PWD}/src/src.mk
 export CFLAGS := -std=c99
 
