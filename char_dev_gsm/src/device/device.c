@@ -15,7 +15,7 @@ unsigned int first_minor = 0;
 int sts_major = -1;
 
 static int gsm_sts;
-
+static dev_t cur_dev[GSM_BANK];
 
 int rt_cdev_add = -1;
 int i=0;
@@ -28,9 +28,9 @@ static struct file_operations gsm_dev_fops =
 };
 
 
-static int register_dev(void)
+int register_dev(void)
 {
-    static dev_t cur_dev[GSM_BANK];
+    
     printk(KERN_NOTICE "GSM: In register_dev().\n");
         /* Get the mazor and minor number */
     sts_major = alloc_chrdev_region(&major,first_minor,GSM_BANK,DEV_NAME);
@@ -57,7 +57,7 @@ static int register_dev(void)
             }
             else
             {
-                printk(KERN_INFO "GSM: The device has been added successfully.\n\0");
+                printk(KERN_INFO "GSM: The device has been added successfully.\n");
                 device_create(gsm_class, NULL, cur_dev[i], NULL, DEV_NAME "%d",i);
                 
             }
@@ -73,7 +73,7 @@ void unregister_dev(void)
     {
         device_destroy(gsm_class,cur_dev[0]);
         class_destroy(gsm_class);
-        cdev_del();
+        //cdev_del();
         unregister_chrdev_region(major,GSM_BANK);
         cdev_del(&gsm_dev[i]);
         printk(KERN_INFO "GSM: The device has ben removed\n");
