@@ -1,0 +1,35 @@
+----------------- kernel logs while inserting the module -----------------
+root@iSense-V4:~/LKM# insmod gsm-led.ko 
+gsm_led: loading out-of-tree module taints kernel.
+GSM: Initialising the GSM module.
+GSM: In register_dev().
+GSM: Major number = 246
+GSM: The device has been added successfully.
+GSM : gpio_request_array() = 0
+GSM:---
+GSM : PA14 = 1
+GSM : PA14 = 0
+GSM : PA16 = 1
+GSM : PA16 = 0
+GSM:----
+GSM:---
+GSM : PA14 = 1
+GSM : PA14 = 0
+GSM : PA16 = 1
+GSM : PA16 = 0
+GSM:----
+GSM:---
+GSM : PA14 = 1
+GSM : PA14 = 0
+GSM : PA16 = 1
+GSM : PA16 = 0
+GSM:----
+root@iSense-V4:~/LKM# cat /proc/modules 
+gsm_led 12288 0 - Live 0xbf000000 (O)
+root@iSense-V4:~/LKM#
+root@iSense-V4:~/LKM#
+root@iSense-V4:~/LKM# ls /dev/gsm*
+/dev/gsm0
+root@iSense-V4:~/LKM# ls /sys/class/gsm*
+gsm0
+root@iSense-V4:~/LKM# 

@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "device.h": "c"
+        "device.h": "c",
+        "pwr_hndl.h": "c"
     }
 }
