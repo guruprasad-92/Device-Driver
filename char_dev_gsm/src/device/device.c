@@ -7,6 +7,8 @@
 #include <asm/uaccess.h>
 #include <linux/kdev_t.h>
 
+#include <linux/gpio.h>
+
 
 static struct class *gsm_class;
 static struct cdev gsm_dev[GSM_BANK];
@@ -29,8 +31,7 @@ static struct file_operations gsm_dev_fops =
 
 
 int register_dev(void)
-{
-    
+{    
     printk(KERN_NOTICE "GSM: In register_dev().\n");
         /* Get the mazor and minor number */
     sts_major = alloc_chrdev_region(&major,first_minor,GSM_BANK,DEV_NAME);

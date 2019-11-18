@@ -1,0 +1,54 @@
+------------------------ LED driver error log --------------------------
+root@iSense-V4:~# rmmod gsm-led.ko
+GSM: Removing the GSM module.
+GSM: In unregister_dev().
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 357 at lib/kobject.c:691 0xc06ad178
+Unable to handle kernel paging request at virtual address 0f600001
+pgd = c6734000
+[0f600001] *pgd=00000000
+Internal error: Oops: 5 [#1] ARM
+Modules linked in: gsm_led(O-)
+CPU: 0 PID: 357 Comm: rmmod Tainted: G           O    4.14.88-01445-g234c56a01768-dirty #10
+Hardware name: Atmel SAMA5
+task: c7492e00 task.stack: c6660000
+pc : [<c06b7d18>]    lr : [<0f600001>]    psr: a00b0093
+sp : c6661e10  ip : ffff0a00  fp : c0770dc8
+r10: c6661e38  r9 : c0a403b0  r8 : 00000002
+r7 : c6661f38  r6 : c07dd424  r5 : c07dd426  r4 : ffffffff
+r3 : ffffff04  r2 : c0a403b0  r1 : c0a403b0  r0 : c0a3ffdc
+Flags: NzCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment none
+Control: 10c53c7d  Table: 26734059  DAC: 00000051
+Process rmmod (pid: 357, stack limit = 0xc6660208)
+Stack: (0xc6661e10 to 0xc6662000)
+1e00:                                     c07dd418 c07dd425 c0a3ffdc c06ba8f4
+1e20: c07dd424 ffffff04 ffff0a00 c0144bcc 000003e0 c0a3ffd0 ffffff04 ffff0a00
+1e40: 00000000 000003e0 00000000 00000000 c0a3fac8 ffffffff 00000000 00000000
+1e60: 00000000 c06bab1c 00000000 c0144714 00000038 00000000 00000009 00000000
+1e80: 000002b3 ffffffff 00000000 00000000 00000000 00000000 00000009 00000000
+1ea0: 000002b3 ffffffff 600b0013 c0144d2c c07dd418 c6661f34 00000000 c6661f20
+1ec0: c07dd408 00000000 00000009 c06ad178 000002b3 00000081 00000000 c0144eec
+1ee0: c07dd418 c6661f34 c6661f20 c01166b8 000002b3 c06ad178 00000081 bf00228c
+1f00: beda5b50 00000880 00000081 c01076a4 c6660000 c011674c 00000000 c6661f20
+1f20: c07dd418 c6661f34 bf00228c c06ad178 c07dd418 0f600001 bf00228c c6660000
+1f40: bf002250 beda5b50 00000880 bf000214 bf0020c0 c0164210 00000000 5f6d7367
+1f60: 0064656c c7493164 c7492e00 c0a3e7ac c7493164 c7492e00 c7493164 c7492e00
+1f80: beda5d24 c012d784 ffffe000 c01076a4 ffffe000 001076a4 0001fcf0 5f6d7367
+1fa0: 0064656c c01074a0 0001fcf0 5f6d7367 beda5b50 00000880 000a9bfc beda5de8
+1fc0: 0001fcf0 5f6d7367 0064656c 00000081 beda5de4 000a9624 000a965c 00000000
+1fe0: beda5b48 beda5b38 0001fb58 b6e29130 600b0010 beda5b50 00000000 00000000
+Function entered at [<c06b7d18>] from [<c06ba8f4>]
+Function entered at [<c06ba8f4>] from [<c06bab1c>]
+Function entered at [<c06bab1c>] from [<c0144714>]
+Function entered at [<c0144714>] from [<c0144d2c>]
+Function entered at [<c0144d2c>] from [<c0144eec>]
+Function entered at [<c0144eec>] from [<c01166b8>]
+Function entered at [<c01166b8>] from [<c011674c>]
+Function entered at [<c011674c>] from [<c06ad178>]
+Function entered at [<c06ad178>] from [<bf000214>]
+Function entered at [<bf000214>] from [<c0164210>]
+Function entered at [<c0164210>] from [<c01074a0>]
+Code: e1dd41fa 3a00001c e3540000 0a00001e (e5dec000) 
+---[ end trace b37f9550756e72ca ]---
+Segmentation fault
+root@iSense-V4:~# 
