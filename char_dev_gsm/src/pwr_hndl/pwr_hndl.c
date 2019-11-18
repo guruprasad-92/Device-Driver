@@ -1,42 +1,42 @@
 #include <linux/kernel.h>
+#include <linux/gpio.h>
+#include <linux/module.h>
+#include <linux/delay.h>
+
 
 #include "pwr_hndl.h"
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
+//char G_perr[100] = {0};
 
-char G_perr[100] = {0};
+struct gpio GSM_PINS[] = {
+    {GSM_VBAT_EN, GPIOF_OUT_INIT_LOW, "vbatt_en"},
+    {GSM_ON_OFF, GPIOF_OUT_INIT_LOW, "on_off"},
+};
 
-void blink_led(int fd, float tm_p, float duty, int no)
+int gsm_pwr_cycle(void)
 {
-    int t_on = (int)( (duty*tm_p)/100 );
-    int t_off = (int)tm_p - t_on;
-    for(int i=0;i<no;i++)
+    int err = 0;
+    int dl = 500;
+    int i;
+    err = gpio_request_array(GSM_PINS, ARRAY_SIZE(GSM_PINS));
+    printk(KERN_INFO "GSM : gpio_request_array() = %d\n",err);
+    if (err >= 0)
     {
-        write(fd,"1",1);
-        usleep((u_int32_t)t_on * 1000);
-        write(fd,"0",1);
-        usleep((u_int32_t)t_off * 1000);
+        for(i=0;i<3;i++)
+        {
+            gpio_set_value(GSM_PINS[0].gpio,1);
+            printk(KERN_INFO "GSM:---\nGSM : PA14 = 1\n");
+            mdelay(dl);
+            gpio_set_value(GSM_PINS[0].gpio,0);
+            printk(KERN_INFO "GSM : PA14 = 0\n");
+            mdelay(dl);
+            gpio_set_value(GSM_PINS[1].gpio,1);
+            printk(KERN_INFO "GSM : PA16 = 1\n");
+            mdelay(dl);
+            gpio_set_value(GSM_PINS[1].gpio,0);
+            printk(KERN_INFO "GSM : PA16 = 0\nGSM:----\n"); 
+            mdelay(dl);
+        }
     }
-}
-
-int pwr_handl(char *pth, float tm_p, float duty, int no)
-{
-    memset(G_perr,0,100);
-    int fd = open(pth,O_RDWR);
-    if(fd < 0)
-    {
-        printk(KERN_ERR "GSM: Unable to open %s\n",pth);
-    }
-    else
-    {
-        printk(KERN_INFO "GSM: LED has been opened\n");
-        blink_led(fd,duty,tm_p,val);
-    }
-    
+    return 0;
 }

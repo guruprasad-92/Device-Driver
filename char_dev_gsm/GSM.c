@@ -1,13 +1,18 @@
 /*
+    Reference link : 
+    https://embetronicx.com/tutorials/linux/device-drivers/linux-device-driver-tutorial-programming/
+    http://derekmolloy.ie/writing-a-linux-kernel-module-part-2-a-character-device/
+*/
+/*
     main()
 */
 
 #include <linux/init.h> /* module_init(), module_exit() */
 #include <linux/module.h> /* version info, MODULE_LICENSE, MODULE_AUTHOR, printk() */
 #include <linux/kernel.h> // Contains types, macros, functions for the kernel
-
-#include "src/pwr_hndl/pwr_hndl.h"
 #include "src/device/device.h"
+#include "src/pwr_hndl/pwr_hndl.h"
+
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Guruprasad");
@@ -23,16 +28,15 @@ MODULE_PARM_DESC(name, "The name to display in /var/log/kern.log");  ///< parame
 /*
     ----------------------------------------------------------------------------
 */
-static int __init gsm_init (void)
+static int  gsm_init (void)
 {
     printk(KERN_INFO "GSM: Initialising the %s module.\n",name);
     register_dev();
-    pwr_handl(GSM_ON_OFF,30,300,5);
-    pwr_handl(GSM_VBAT_EN,20,200,5);
+    gsm_pwr_cycle();
     return 0;
 }
 
-static void __exit gsm_exit (void)
+static void  gsm_exit (void)
 {
     printk(KERN_INFO "GSM: Removing the %s module.\n",name);
     unregister_dev();
