@@ -1,6 +1,10 @@
 {
     "files.associations": {
         "device.h": "c",
+<<<<<<< HEAD
         "pwr_hndl.h": "c"
+=======
+        "gpio.h": "c"
+>>>>>>> 9b34ef4c7f471e677c86b0da8e955e3c69d2fcb8
     }
 }
