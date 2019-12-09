@@ -34,6 +34,11 @@ struct file_operations gsm_dev_fops =
     .write = scull_write
 };
 
+sttaic void scull_setup_cdev (struct scull_dev *dev, int index)
+{
+    int err = -1;
+    cdev_init()
+}
 
 int register_dev(void)
 {
