@@ -40,3 +40,8 @@ int gsm_pwr_cycle(void)
     }
     return 0;
 }
+
+void gsm_free_gpio(void)
+{
+    gpio_free_array(GSM_PINS, ARRAY_SIZE(GSM_PINS));
+}

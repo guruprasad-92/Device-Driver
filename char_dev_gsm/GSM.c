@@ -28,19 +28,32 @@ MODULE_PARM_DESC(name, "The name to display in /var/log/kern.log");  ///< parame
 /*
     ----------------------------------------------------------------------------
 */
-static int  gsm_init (void)
-{
+
+static uint8_t cnt = 0;
+
+static int __init gsm_init (void)
+{    
     printk(KERN_INFO "GSM: Initialising the %s module.\n",name);
-    register_dev();
-    gsm_pwr_cycle();
-    return 0;
+    if (cnt == 0)
+    {
+        if(register_dev() >= 0)
+            gsm_pwr_cycle();
+        cnt = 1;
+        return 0;
+    }
+    else
+    {
+        printk(KERN_ERR "GSM: The device has already inserted.\n");
+        return -1;
+    }
+    
 }
 
-static void  gsm_exit (void)
+static void __exit gsm_exit (void)
 {
     printk(KERN_INFO "GSM: Removing the %s module.\n",name);
     unregister_dev();
-    
+    cnt = 0;    
 }
 
 module_init(gsm_init);

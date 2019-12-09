@@ -5,7 +5,7 @@ ifeq ($(ARCH),arm)
 else
 	KDIR := /lib/modules/$(shell uname -r)/build/
 endif
-TARGET := gsm-led
+TARGET := GSM_LED
 obj-m := ${TARGET}.o #Object name should not be match with the main file name 
 # This causes "missing MODULE_LICENSE()" warnig while building the module
 #${TARGET}-objs := lkm_gsm
