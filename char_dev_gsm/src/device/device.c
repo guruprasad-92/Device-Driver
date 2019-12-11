@@ -11,10 +11,12 @@
 
 #include "../file_ops/file_ops.h"
 #include "../pwr_hndl/pwr_hndl.h"
+#include "../dev_dt_struct.h"
 
 
  struct class *gsm_class;
- struct cdev gsm_dev[GSM_BANK];
+struct cdev gsm_dev[GSM_BANK];
+
  dev_t major;
 unsigned int first_minor = 0;
 static int sts_major = -1;
@@ -31,14 +33,9 @@ struct file_operations gsm_dev_fops =
     .owner = THIS_MODULE,
     .open = scull_open,
     .read = scull_read,
-    .write = scull_write
+    .write = scull_write,
+    .release = scull_release,
 };
-
-sttaic void scull_setup_cdev (struct scull_dev *dev, int index)
-{
-    int err = -1;
-    cdev_init()
-}
 
 int register_dev(void)
 {

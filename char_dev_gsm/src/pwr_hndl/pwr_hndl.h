@@ -16,7 +16,8 @@
 
 
 
-int gsm_pwr_cycle(void);
+int qktl4g_pwr_cycle(void);
 void gsm_free_gpio(void);
+void gsm_pwr_off(void);
 
 #endif

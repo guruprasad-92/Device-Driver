@@ -2,13 +2,7 @@
 #define DEVICE_H
 
 #include <linux/compiler.h> // required for "__must_check"
-
-#define GSM_BANK      1
-#define DEV_NAME    "gsm"
-#define CLASS       "gsm-class"
-
-
-
+#include "../dev_dt_struct.h"
 
 __must_check int register_dev(void);
 

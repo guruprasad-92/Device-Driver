@@ -10,8 +10,10 @@
 #include <linux/init.h> /* module_init(), module_exit() */
 #include <linux/module.h> /* version info, MODULE_LICENSE, MODULE_AUTHOR, printk() */
 #include <linux/kernel.h> // Contains types, macros, functions for the kernel
+
 #include "src/device/device.h"
 #include "src/pwr_hndl/pwr_hndl.h"
+#include "src/file_ops/file_ops.h"
 
 
 MODULE_LICENSE("GPL");
@@ -29,31 +31,27 @@ MODULE_PARM_DESC(name, "The name to display in /var/log/kern.log");  ///< parame
     ----------------------------------------------------------------------------
 */
 
-static uint8_t cnt = 0;
-
 static int __init gsm_init (void)
 {    
-    printk(KERN_INFO "GSM: Initialising the %s module.\n",name);
-    if (cnt == 0)
+    printk(KERN_INFO "GSM: Initialising the %s module.\n",name);    
+    if(register_dev() >= 0)
     {
-        if(register_dev() >= 0)
-            gsm_pwr_cycle();
-        cnt = 1;
+        if (mdm_init() == 0) 
         return 0;
     }
     else
     {
-        printk(KERN_ERR "GSM: The device has already inserted.\n");
+
         return -1;
     }
-    
+    return 0;
 }
 
 static void __exit gsm_exit (void)
 {
     printk(KERN_INFO "GSM: Removing the %s module.\n",name);
     unregister_dev();
-    cnt = 0;    
+    gsm_pwr_off();
 }
 
 module_init(gsm_init);
