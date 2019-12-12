@@ -77,24 +77,24 @@ int register_dev(void)
 
 void unregister_dev(void)
 {
-    printk(KERN_NOTICE "GSM: In unregister_dev().\n");
+    //printk(KERN_NOTICE "GSM: In unregister_dev().\n");
     if(sts_major == 0)
     {
-        printk(KERN_NOTICE "GSM: sts_major = 0.\n");
+        //printk(KERN_NOTICE "GSM: sts_major = 0.\n");
         gsm_free_gpio();
-        printk(KERN_NOTICE "GSM: gpio pins have been removed.\n");
+        //printk(KERN_NOTICE "GSM: gpio pins have been removed.\n");
         
         device_destroy(gsm_class,cur_dev[0]);
-        printk(KERN_NOTICE "GSM: device_destroy(gsm_class). \n");
+        //printk(KERN_NOTICE "GSM: device_destroy(gsm_class). \n");
         
         class_destroy(gsm_class);
-        printk(KERN_NOTICE "GSM: class_destroy(gsm_class). \n");
+        //printk(KERN_NOTICE "GSM: class_destroy(gsm_class). \n");
         
         unregister_chrdev_region(major,GSM_BANK);
-        printk(KERN_NOTICE "GSM: unregister_chrdev_region(major). \n");
+        //printk(KERN_NOTICE "GSM: unregister_chrdev_region(major). \n");
 
         cdev_del(gsm_dev); //cdev_del(&gsm_dev[i]); // Here we were passing i=1. which is invalid
-        printk(KERN_NOTICE "GSM: cdev_del(gsm_dev).\n");
+        //printk(KERN_NOTICE "GSM: cdev_del(gsm_dev).\n");
 
         printk(KERN_INFO "GSM: The device has ben removed\n");
     }

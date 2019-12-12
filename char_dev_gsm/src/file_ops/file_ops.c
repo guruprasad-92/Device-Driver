@@ -20,22 +20,74 @@ static int SG_sts_op;
 
 static struct GS_mdm gs_mdm;
 
-int mdm_init(void)
+/*
+static int str_tok_hld;
+char* str_tok(char *buf, const char *tok)
 {
-    memset(gs_mdm.mk,0,20);
-    sprintf(gs_mdm.mk,"quectel");
-    gs_mdm.typ = 4;
-    if ( qktl4g_pwr_cycle() == 0 )
+    char *tmp;
+    uint8_t sz = strlen(buf);
+    
+}
+
+uint8_t count_tok(const char *buf, char tok)
+{
+    uint8_t rt = 0;
+    uint8_t sz = strlen(buf);
+    int i =0;
+    for(i=0;i<sz;i++)
     {
-        gs_mdm.sts = 1;
+        if(buf[i] == tok)
+            rt += 1;
+    }
+    return rt;
+}
+
+char chk_last_tok(const char *buf, const char tok)
+{
+    uint8_t sz = strlen(buf);
+    if( buf[sz-1] == tok )
+        return 1;
+    else
+    {
+        return 0;
+    }
+    
+}
+
+int process_usr_buf(char *usr_buf, struct GS_mdm *gs_tmp_mdm)
+{
+    uint8_t i = 0;
+    char *tmp[5];
+    char *st1, *st2;
+    st1 = strstr(usr_buf,"rbt=");
+    if( st1 && ( usr_buf[3] == '=') && (chk_last_tok(usr_buf,',') == 0) )
+    {
+        *st1 = ',';
+        if(count_tok(usr_buf,',') == 3 )
+        {
+            printk(KERN_CRIT "process_usr_buf() All Passed.\n");
+            while ( ( st2 = strsep(&usr_buf,",") ) != NULL)
+            {
+                strcpy(tmp[i],st2);
+                printk(KERN_CRIT "spliting : %s\n",tmp[i]);
+                i += 1;
+            }
+        }
         return 0;
     }
     else
-    {
-        gs_mdm.sts = 0;
         return -1;
-    }
-    return 0;
+}
+*/
+int mdm_init(void)
+{
+    memset(gs_mdm.mk,0,15);
+    sprintf(gs_mdm.mk,"Quectel");
+    gs_mdm.typ = 4;
+    gs_mdm.sts = 1;
+    gs_mdm.sts_tmp = 1;
+    gs_mdm.rbt = 0;
+    return (gsm_onoff(&gs_mdm));
 }
 
 int scull_trim(struct scull_dev *dev)
@@ -133,10 +185,15 @@ ssize_t scull_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
         return -ERESTARTSYS;
     }
     
-    if( *f_pos >= dev->size )
+    if( *f_pos > dev->size )
     {
         printk(KERN_ERR "GSM: from scull_read(), dev->size = %ld *f_pos = %lld\n",dev->size,*f_pos);
         ret_val = -1;
+        goto ret;
+    }
+    else if (*f_pos == dev->size)
+    {
+        ret_val = 0;
         goto ret;
     }
     else
@@ -157,19 +214,31 @@ ssize_t scull_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
     {
         //Error case
         ret_val = -1;
-        printk(KERN_ERR "GSM: Error in copy_to_user().\n");
+        printk(KERN_ERR "GSM: Error in copy_to_user().\n");        
         goto ret;
     }
-    printk(KERN_DEBUG "GSM: The data has been copied.\n");
+    else
+    {
+        *f_pos += count;
+    }    
+    
     ret_val = count;
     ret : ;
+    printk(KERN_CRIT "GSM: The data has been copied, *f_pos = %lld\n",*f_pos);
     return ret_val;
 }
 
 ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, loff_t *f_pos)
 {
-    ssize_t rt_val = 0;
-    printk(KERN_INFO "GSM: In scull_write()\n");
+    ssize_t rt_val = -1;
+    char *rmv = NULL;
+    //struct GS_mdm gs_tmp_mdm;
+    *f_pos += count;
+    if( *f_pos > count)
+    {        
+        return count;
+    }
+    printk(KERN_INFO "GSM: In scull_write(), *f_pos = %lld\n",*f_pos);
     if(count > Kbuff_rd_sz)
     {
         printk(KERN_ERR"GSM: scull_write(): count exceeds the limit (%d)\n",Kbuff_rd_sz);
@@ -184,75 +253,91 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
             printk(KERN_CRIT "GSM: copy_from_user() failed.\n");
             return -1;
         }
-
-        printk(KERN_CRIT "GSM: From user sps = %s\n",SG_buff_wr);
-
-        if(strstr(SG_buff_wr,"mdm"))
+        else
         {
-            printk(KERN_DEBUG "GSM: Problem");
+            rmv = strchr(SG_buff_wr, '\n'); //The $echo will append this.
+            if(rmv)
+            {
+                *rmv = 0;                
+            }    
+            rmv = strchr(SG_buff_wr, '\r');
+            if(rmv)
+            {
+                *rmv = 0;                
+            }
+            //printk(KERN_CRIT "process_usr_buf = %d\n",process_usr_buf(SG_buff_wr,&gs_tmp_mdm) );
+        }
+
+        printk(KERN_CRIT "GSM: strlen(SG_buff_wr) = %d\n",strlen(SG_buff_wr));
+
+        if(strstr(SG_buff_wr,"rbt=") && ( SG_buff_wr[3] == '=') )
+        {
             memset(gs_mdm.mk,0,strlen(gs_mdm.mk));
-            if( !strcmp(SG_buff_wr,"mdm=qecktel,2g") )
+        /*
+            if( !strcmp(SG_buff_wr,"rbt=Quectel,2") )
             {
                 printk(KERN_ERR "GSM: Unsupported device Quectel-2g\n");            
                 sprintf(gs_mdm.mk,"Quecktel");
                 gs_mdm.typ = 2;
-                rt_val = -1;
+                rt_val = -EINVAL;
             }
-            else if( !strcmp(SG_buff_wr,"mdm=quectel,3g") )
+            else if( !strcmp(SG_buff_wr,"rbt=Quectel,3") )
             {
                 printk(KERN_ERR "GSM: Unsupported device Quectel-3g\n");
                 sprintf(gs_mdm.mk,"Quecktel");
                 gs_mdm.typ = 3;
-                rt_val = -1;
+                rt_val = -EINVAL;
             }
-            else if( !strcmp(SG_buff_wr,"mdm=quectel,4g") )
+        */
+            if( !strcmp(SG_buff_wr,RBT_Q(4)) )
             {
-                sprintf(gs_mdm.mk,"Quecktel");
+                sprintf(gs_mdm.mk,MDM_Q);
                 gs_mdm.typ = 4;
-                rt_val = 0xA;
+                gs_mdm.sts = 1;
+                gs_mdm.sts_tmp = 1;
+                gs_mdm.rbt = 1;
+
+                rt_val = 1;
             }
             else
             {
                 printk(KERN_ERR "GSM: Invalid data(mdm) from user space.\n");
-                rt_val = -1;
+                rt_val = -EINVAL;
             }
             
         }               
-        else if( !strcmp(SG_buff_wr,"0") && gs_mdm.sts )
+        else if( !strcmp(SG_buff_wr,"0") )
         {
-            gs_mdm.sts = 0;
-            printk(KERN_INFO "GSM: MDM-%s.%d turned off",gs_mdm.mk,gs_mdm.typ);
+            gs_mdm.sts_tmp = 0;
+            printk(KERN_INFO "GSM: MDM-%s,type-%dg turned off",gs_mdm.mk,gs_mdm.typ);
             rt_val = 0;
         }
-        else if( !strcmp(SG_buff_wr,"1") && ( !gs_mdm.sts ) )
+        else if( !strcmp(SG_buff_wr,"1") )
         {
-            gs_mdm.sts = 1;
-            printk(KERN_INFO "GSM: MDM-%s.%d turned on",gs_mdm.mk,gs_mdm.typ);
+            gs_mdm.sts_tmp = 1;
+            printk(KERN_INFO "GSM: MDM-%s,type-%dg turned on",gs_mdm.mk,gs_mdm.typ);
             rt_val = 1;
         }
         else if( !strcmp(SG_buff_wr,"reboot") )
         {
             printk(KERN_DEBUG "GSM: rebooting the modem... .. .\n");
-            gsm_pwr_off();
-            if (qktl4g_pwr_cycle() == 0)
-            {
-                printk(KERN_DEBUG "GSM: MDM %s rebooted.\n",gs_mdm.mk);
-                rt_val = 0xa1;
-            }    
-            else
-            {
-                printk(KERN_DEBUG "GSM: Error in MDM %s while rebooting. Err in power cycle.\n",gs_mdm.mk);
-                gs_mdm.sts = 0;
-                rt_val = -1;
-            }
+            gs_mdm.sts = 1;
+            gs_mdm.sts_tmp = 1;
+            gs_mdm.rbt = 1;
+
+            rt_val = 1;
         }
         else
         {
             printk(KERN_CRIT "GSM: Invalid data(sts) from user space.\n");
-            rt_val = -1;
+            rt_val = -EINVAL;
         }
-        
     }
-    
+
+    if(rt_val >= 0)
+    {
+        rt_val = gsm_operate(&gs_mdm);
+    }
+
     return rt_val;
 }

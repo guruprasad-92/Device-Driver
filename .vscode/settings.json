@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "module.h": "c",
-        "fs.h": "c"
+        "fs.h": "c",
+        "string.h": "c",
+        "time.h": "c"
     }
 }

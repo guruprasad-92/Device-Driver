@@ -7,6 +7,9 @@
 
 #include <unistd.h>
 
+#define Tl(a)  ( "silu-"#a)
+
+/*
 int main()
 {
     int fd = open("/dev/gsm0",O_RDWR);
@@ -31,4 +34,18 @@ int main()
         fd = close(fd);
         printf("close : fd = %d\n",fd);
     }
+}
+*/
+int main()
+{
+    char *a[50] = {0};
+    char b[90] = {0};
+    printf("Enter a string : ");
+    scanf("%s",b);
+    char *p;
+    p = strtok(b,",");
+    printf("%s\n",p);
+    p = strtok(NULL,",");
+    printf("%s\n",p);
+    printf("t : %s, tsz : %ld\n",Tl(0),strlen(Tl(12)) );
 }

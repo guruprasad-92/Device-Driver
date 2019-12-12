@@ -1,0 +1,19 @@
+
+Device write rules for /dev/gsm0
+
+---- Format : 1 -----------
+rbt=quectel,4,0
+
+signature : rbt
+make    : Quectel / Telit
+type    : 2 / 3 / 4
+-----------xxxxxx-----------
+
+-------- format : 2 -----------
+reboot : < Reboot the preseted modem >
+ 0 : Turn off the preseted modem
+ 1 : Turn on the preseted modem
+-----------xxxxxxxxxxx---------
+
+Device read format : 
+make,type,status
