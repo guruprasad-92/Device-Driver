@@ -53,8 +53,21 @@ void gsm_free_gpio(void)
 
 void gsm_pwr_off(void)
 {
-    gpio_set_value(GSM_PINS[0].gpio,0);
+    uint8_t i=0;
     gpio_set_value(GSM_PINS[1].gpio,0);
+    gpio_set_value(GSM_PINS[3].gpio,0);
+    msleep(700);
+
+    gpio_set_value(GSM_PINS[1].gpio,1);
+    gpio_set_value(GSM_PINS[3].gpio,1);
+    ssleep(30);
+
+    for(i=0;i<4;i++)
+    {
+        gpio_set_value(GSM_PINS[i].gpio,0);
+    }
+    msleep(50);
+
     gpio_free_array(GSM_PINS, ARRAY_SIZE(GSM_PINS));
 }
 
@@ -109,17 +122,34 @@ int gsm_onoff(struct GS_mdm *gs_mdm)
 
 int gsm_operate(struct GS_mdm *gs_mdm)
 {
-    int rt_val = -1;
+    int rt_val = -1;    
     if (gs_mdm->rbt)
     {
-        gs_mdm->rbt = 0;
-        gsm_pwr_off();
-        rt_val = gsm_onoff(gs_mdm);                
+        if (gs_mdm->sts == 0 )
+        {
+            gs_mdm->sts = 1;
+            gs_mdm->sts_tmp = 1;
+            
+            if ( gsm_onoff(gs_mdm) < 0 )
+            {
+                rt_val = -EBUSY;
+                //goto ret;
+            }   
+        }
+        else
+        {
+            gs_mdm->rbt = 0;
+            gs_mdm->sts = 1;
+            gs_mdm->sts_tmp = 1;
+            gsm_pwr_off();
+            rt_val = gsm_onoff(gs_mdm);
+        }
     }
     else if (gs_mdm->sts != gs_mdm->sts_tmp)
     {
         gs_mdm->sts = gs_mdm->sts_tmp;
         rt_val = gsm_onoff(gs_mdm);
     }
+    gs_mdm->rbt = 0;
     return rt_val;
 }

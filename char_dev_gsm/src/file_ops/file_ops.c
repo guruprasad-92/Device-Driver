@@ -255,6 +255,7 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
         }
         else
         {
+            printk(KERN_CRIT "GSM: From user : %s\n",SG_buff_wr);
             rmv = strchr(SG_buff_wr, '\n'); //The $echo will append this.
             if(rmv)
             {
@@ -309,20 +310,20 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
         else if( !strcmp(SG_buff_wr,"0") )
         {
             gs_mdm.sts_tmp = 0;
-            printk(KERN_INFO "GSM: MDM-%s,type-%dg turned off",gs_mdm.mk,gs_mdm.typ);
+            printk(KERN_CRIT "GSM: MDM-%s,type-%dg turned off",gs_mdm.mk,gs_mdm.typ);
             rt_val = 0;
         }
         else if( !strcmp(SG_buff_wr,"1") )
         {
             gs_mdm.sts_tmp = 1;
-            printk(KERN_INFO "GSM: MDM-%s,type-%dg turned on",gs_mdm.mk,gs_mdm.typ);
+            printk(KERN_CRIT "GSM: MDM-%s,type-%dg turned on",gs_mdm.mk,gs_mdm.typ);
             rt_val = 1;
         }
         else if( !strcmp(SG_buff_wr,"reboot") )
         {
-            printk(KERN_DEBUG "GSM: rebooting the modem... .. .\n");
-            gs_mdm.sts = 1;
-            gs_mdm.sts_tmp = 1;
+            printk(KERN_CRIT "GSM: rebooting the modem... .. .\n");
+            //gs_mdm.sts = 1;
+            //gs_mdm.sts_tmp = 1;
             gs_mdm.rbt = 1;
 
             rt_val = 1;
