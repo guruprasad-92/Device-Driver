@@ -7,6 +7,8 @@
 #include <linux/slab.h>
 #include <linux/uaccess.h>
 
+#include <linux/delay.h>
+
 
 #include "../dev_dt_struct.h"
 #include "../pwr_hndl/pwr_hndl.h"
@@ -16,9 +18,12 @@
 static char SG_buff_rd[Kbuff_rd_sz] = {0};
 static char SG_buff_wr[Kbuff_rd_sz] = {0};
 //static uint8_t SG_mdm_sts = MDM_ABSNT;
-static int SG_sts_op;
+//static int SG_sts_op;
 
 static struct GS_mdm gs_mdm;
+struct semaphore EGS_sem;
+
+
 
 /*
 static int str_tok_hld;
@@ -115,10 +120,17 @@ int scull_trim(struct scull_dev *dev)
 int scull_open(struct inode *inode, struct file *filp)
 {
 
-
     struct scull_dev *dev; // device information 
+    int ret = 0;
     dev = container_of(inode->i_cdev, struct scull_dev, cdev);
     filp->private_data = dev; // for other methods 
+    
+
+    if(down_interruptible(&EGS_sem))
+    {
+        printk(KERN_ERR DEV_DBG" : Couldn't get the semaphore\n");
+        return -ERESTARTSYS;
+    }
 
     // now trim to 0 the length of the device if open was write-only 
     if ( (filp->f_flags & O_ACCMODE) == O_WRONLY) 
@@ -126,40 +138,45 @@ int scull_open(struct inode *inode, struct file *filp)
         scull_trim(dev); // ignore errors 
     }
 
-    
+/*
     if(!SG_sts_op)
     {
         SG_sts_op = 1;
-        return 0;
+        ret = 0;
     }
     else
     {
-        printk("GSM: Device has already opened. Close it first.\n");
-        return -EBUSY;
+        printk(KERN_ERR DEV_DBG" : Device has already opened. Close it first.\n");
+        ret = -EBUSY;
     }
-    
+*/
+    up(&EGS_sem);
+    return ret;
     
     /* success */
 }
 
 int scull_release(struct inode *inode, struct file *filp)
 {
-    printk(KERN_DEBUG "GSM: In scull_release()\n");
-    SG_sts_op = 0;
+    printk(KERN_CRIT DEV_DBG" : In scull_release()\n");
+    //SG_sts_op = 0;
     return 0;
 }
 
 ssize_t scull_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 {    
     struct scull_dev *dev = filp->private_data;
+
     int ret_val=0;
     int sz = 0;
-
+    int i=0;
+    printk(KERN_CRIT DEV_DBG" : In scull_read()-%d\n",i++);
     sprintf(SG_buff_rd,"%s,%dg,%d",gs_mdm.mk,\
                                 gs_mdm.typ,\
                                 gs_mdm.sts);
     sz = strlen(SG_buff_rd);
     dev->size = sz;
+    printk(KERN_CRIT DEV_DBG" : In scull_read()-%d\n",i++);
     
     // We don't need the linked list at this stage.
     // We need all the data from 0th position in each read, from kernel.
@@ -180,14 +197,15 @@ ssize_t scull_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
         the call returns 0. If a signal is received while blocking, 
         the call returns -EINTR and the semaphore is not acquired.
     */
-    if(down_interruptible(&dev->sem))
-    {
-        return -ERESTARTSYS;
-    }
     
+    if(down_interruptible(&EGS_sem))
+    {
+        printk(KERN_ERR DEV_DBG" : Couldn't get the semaphore in scull_read()\n");
+        return -ERESTARTSYS;
+    }    
     if( *f_pos > dev->size )
     {
-        printk(KERN_ERR "GSM: from scull_read(), dev->size = %ld *f_pos = %lld\n",dev->size,*f_pos);
+        //printk(KERN_ERR DEV_DBG" : from scull_read(), dev->size = %ld *f_pos = %lld\n",dev->size,*f_pos);
         ret_val = -1;
         goto ret;
     }
@@ -196,14 +214,18 @@ ssize_t scull_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
         ret_val = 0;
         goto ret;
     }
+#ifdef KDBG
     else
     {
-        printk(KERN_INFO "GSM: From scull_read(), *f_pos = %lld, dev->sz = %ld\n",*f_pos,dev->size);
-    }    
+        printk(KERN_INFO DEV_DBG" : From scull_read(), *f_pos = %lld, dev->sz = %ld\n",*f_pos,dev->size);
+    } 
+#endif
     if(count > sz)
     {   
         count = sz;
-        printk(KERN_ERR "GSM: Error max count = %d\n",sz);
+#ifdef KDEBG        
+        printk(KERN_ERR DEV_DBG" : Error max count = %d\n",sz);
+#endif        
     }
     else if (count < 0)
     {
@@ -214,7 +236,7 @@ ssize_t scull_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
     {
         //Error case
         ret_val = -1;
-        printk(KERN_ERR "GSM: Error in copy_to_user().\n");        
+        printk(KERN_ERR DEV_DBG" : The tunnel from user to kernel space has failed.\n");        
         goto ret;
     }
     else
@@ -224,7 +246,11 @@ ssize_t scull_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
     
     ret_val = count;
     ret : ;
-    printk(KERN_CRIT "GSM: The data has been copied, *f_pos = %lld\n",*f_pos);
+    up(&EGS_sem);
+
+#ifdef KDBG
+    printk(KERN_CRIT DEV_DBG" : The data has been copied, *f_pos = %lld\n",*f_pos);
+#endif
     return ret_val;
 }
 
@@ -233,29 +259,36 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
     ssize_t rt_val = -1;
     char *rmv = NULL;
     //struct GS_mdm gs_tmp_mdm;
+
+    if(down_interruptible(&EGS_sem))
+    {
+        printk(KERN_ERR DEV_DBG" : Couldn't get the semaphore in scull_read()\n");
+        return -ERESTARTSYS;
+    }
+
     *f_pos += count;
     if( *f_pos > count)
     {        
         return count;
     }
-    printk(KERN_INFO "GSM: In scull_write(), *f_pos = %lld\n",*f_pos);
+    printk(KERN_INFO DEV_DBG" : In scull_write(), *f_pos = %lld\n",*f_pos);
     if(count > Kbuff_rd_sz)
     {
-        printk(KERN_ERR"GSM: scull_write(): count exceeds the limit (%d)\n",Kbuff_rd_sz);
+        printk(KERN_ERR DEV_DBG" : scull_write(): count exceeds the limit (%d)\n",Kbuff_rd_sz);
         rt_val = -ENOSPC;
     }
     else
     {
-        printk(KERN_INFO "GSM: In scull_write()\n");
+        printk(KERN_INFO DEV_DBG" : In scull_write()\n");
         memset(SG_buff_wr,0,strlen(SG_buff_wr));
         if ( copy_from_user(SG_buff_wr,buf,count) != 0)
         {
-            printk(KERN_CRIT "GSM: copy_from_user() failed.\n");
+            printk(KERN_CRIT DEV_DBG" : copy_from_user() failed.\n");
             return -1;
         }
         else
         {
-            printk(KERN_CRIT "GSM: From user : %s\n",SG_buff_wr);
+            printk(KERN_CRIT DEV_DBG" : From user : %s\n",SG_buff_wr);
             rmv = strchr(SG_buff_wr, '\n'); //The $echo will append this.
             if(rmv)
             {
@@ -269,7 +302,7 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
             //printk(KERN_CRIT "process_usr_buf = %d\n",process_usr_buf(SG_buff_wr,&gs_tmp_mdm) );
         }
 
-        printk(KERN_CRIT "GSM: strlen(SG_buff_wr) = %d\n",strlen(SG_buff_wr));
+        printk(KERN_CRIT DEV_DBG" : strlen(SG_buff_wr) = %d\n",strlen(SG_buff_wr));
 
         if(strstr(SG_buff_wr,"rbt=") && ( SG_buff_wr[3] == '=') )
         {
@@ -277,14 +310,14 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
         /*
             if( !strcmp(SG_buff_wr,"rbt=Quectel,2") )
             {
-                printk(KERN_ERR "GSM: Unsupported device Quectel-2g\n");            
+                printk(KERN_ERR DEV_DBG" : Unsupported device Quectel-2g\n");            
                 sprintf(gs_mdm.mk,"Quecktel");
                 gs_mdm.typ = 2;
                 rt_val = -EINVAL;
             }
             else if( !strcmp(SG_buff_wr,"rbt=Quectel,3") )
             {
-                printk(KERN_ERR "GSM: Unsupported device Quectel-3g\n");
+                printk(KERN_ERR DEV_DBG" : Unsupported device Quectel-3g\n");
                 sprintf(gs_mdm.mk,"Quecktel");
                 gs_mdm.typ = 3;
                 rt_val = -EINVAL;
@@ -302,7 +335,7 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
             }
             else
             {
-                printk(KERN_ERR "GSM: Invalid data(mdm) from user space.\n");
+                printk(KERN_ERR DEV_DBG" : Invalid data(mdm) from user space.\n");
                 rt_val = -EINVAL;
             }
             
@@ -310,18 +343,18 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
         else if( !strcmp(SG_buff_wr,"0") )
         {
             gs_mdm.sts_tmp = 0;
-            printk(KERN_CRIT "GSM: MDM-%s,type-%dg turned off",gs_mdm.mk,gs_mdm.typ);
+            printk(KERN_CRIT DEV_DBG" : MDM-%s,type-%dg turned off",gs_mdm.mk,gs_mdm.typ);
             rt_val = 0;
         }
         else if( !strcmp(SG_buff_wr,"1") )
         {
             gs_mdm.sts_tmp = 1;
-            printk(KERN_CRIT "GSM: MDM-%s,type-%dg turned on",gs_mdm.mk,gs_mdm.typ);
+            printk(KERN_CRIT DEV_DBG" : MDM-%s,type-%dg turned on",gs_mdm.mk,gs_mdm.typ);
             rt_val = 1;
         }
         else if( !strcmp(SG_buff_wr,"reboot") )
         {
-            printk(KERN_CRIT "GSM: rebooting the modem... .. .\n");
+            printk(KERN_CRIT DEV_DBG" : rebooting the modem... .. .\n");
             //gs_mdm.sts = 1;
             //gs_mdm.sts_tmp = 1;
             gs_mdm.rbt = 1;
@@ -330,7 +363,7 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
         }
         else
         {
-            printk(KERN_CRIT "GSM: Invalid data(sts) from user space.\n");
+            printk(KERN_CRIT DEV_DBG" : Invalid data(sts) from user space.\n");
             rt_val = -EINVAL;
         }
     }
@@ -340,5 +373,31 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
         rt_val = gsm_operate(&gs_mdm);
     }
 
+    up(&EGS_sem);
+
     return rt_val;
+}
+
+loff_t scull_llseek(struct file *filp, loff_t off, int whence)
+{
+    struct scull_dev *dev = filp->private_data;
+    loff_t newpos;
+    switch(whence) 
+    {
+        case 0: /* SEEK_SET */
+            newpos = off;
+        break;
+            case 1: /* SEEK_CUR */
+            newpos = filp->f_pos + off;
+        break;
+            case 2: /* SEEK_END */
+            newpos = dev->size + off;
+        break;
+        default: /* can't happen */
+            return -EINVAL;
+    }
+    if ( (newpos < 0) && ( newpos >= Kbuff_wr_sz ) ) 
+        return -EINVAL;
+    filp->f_pos = newpos;
+    return newpos;
 }

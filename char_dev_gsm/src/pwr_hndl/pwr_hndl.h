@@ -26,7 +26,7 @@
 
 
 
-int qktl4g_pwr_cycle(void);
+int qktl4g_pwr_cycle(struct GS_mdm *gs_mdm);
 void gsm_free_gpio(void);
 void gsm_pwr_off(void);
 int gsm_onoff(struct GS_mdm *gs_mdm);

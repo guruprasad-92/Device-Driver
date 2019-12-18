@@ -1,0 +1,23 @@
+1. Century code : 
+    year - 1900 ... 1999 : 0
+    year - 2000 ... 2099 : 6
+    year - 2100 ... 2199 : 4
+    year - 2200 ... 2299 : 2
+    -------------------------
+    The same series will continue from the next year on words
+    The same is applicable if the years decrease too.
+2. Month code :
+    start month = Jan.
+    month { 1,4,4,0,2,5,0,3,6,1,4,6 }
+3. Day code :
+    Start day : Saturday = 0
+
+-----------------------------------------
+EX :
+    02-nov-2019
+
+    day = { d + month_code + century code + (last 2 digit of the year)/4 } % 7
+    After this calcucaltio you will get the day code. 
+    You can find the same day exactly in the calender if you match.
+
+    

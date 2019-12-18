@@ -3,6 +3,20 @@
         "module.h": "c",
         "fs.h": "c",
         "string.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "cmath": "c",
+        "cstdarg": "c",
+        "cstdint": "c",
+        "cstdio": "c",
+        "cstdlib": "c",
+        "type_traits": "c",
+        "limits": "c",
+        "*.tcc": "c",
+        "typeinfo": "c",
+        "file_ops.h": "c",
+        "termios.h": "c",
+        "stdlib.h": "c",
+        "pwr_hndl.h": "c",
+        "dev_dt_struct.h": "c"
     }
 }

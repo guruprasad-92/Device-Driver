@@ -5,8 +5,9 @@
 #include <linux/cdev.h>
 
 #define GSM_BANK      1
-#define DEV_NAME    "gsm"
-#define CLASS       "gsm-class"
+#define DEV_NAME    "modem"
+#define CLASS       "modem-class"
+#define DEV_DBG     "MDM" // Apear in the kernel debugging.
 
 #define RBT_Q(gen) ("rbt=Quectel,"#gen)
 #define RBT_T(gen) ("rbt=Telit,"#gen)
@@ -45,5 +46,7 @@ struct scull_dev
     struct cdev cdev;   /* Char device structure*/
     
 };
+
+extern struct semaphore EGS_sem;
 
 #endif

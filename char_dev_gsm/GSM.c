@@ -10,9 +10,9 @@
 #include <linux/init.h> /* module_init(), module_exit() */
 #include <linux/module.h> /* version info, MODULE_LICENSE, MODULE_AUTHOR, printk() */
 #include <linux/kernel.h> // Contains types, macros, functions for the kernel
+#include <linux/errno.h>
 
 #include "src/device/device.h"
-#include "src/pwr_hndl/pwr_hndl.h"
 #include "src/file_ops/file_ops.h"
 
 
@@ -22,7 +22,7 @@ MODULE_DESCRIPTION("A simple driver");
 MODULE_VERSION("0.1");
 
 
-static char *name = "GSM";        ///< An example LKM argument -- default value is "world"
+static char *name = "MDM";        ///< An example LKM argument -- default value is "world"
 module_param(name, charp, S_IRUGO); ///< Param desc. charp = char ptr, S_IRUGO can be read/not changed
 MODULE_PARM_DESC(name, "The name to display in /var/log/kern.log");  ///< parameter description
 
@@ -32,26 +32,32 @@ MODULE_PARM_DESC(name, "The name to display in /var/log/kern.log");  ///< parame
 */
 
 static int __init gsm_init (void)
-{    
-    printk(KERN_INFO "GSM: Initialising the %s module.\n",name);    
+{
+    int ret = -1;
+    printk(KERN_INFO DEV_DBG" : Initialising the %s module.\n", name);    
     if(register_dev() >= 0)
     {
-        if (mdm_init() == 0) 
-        return 0;
+        if (mdm_init() == 0)
+        {
+            ret = 0;
+        }
+        else
+        {
+            printk(KERN_ERR DEV_DBG" : Could not initialise the modem.\n");
+            ret = -EIO;
+        }
     }
     else
     {
-
-        return -1;
+        ret = -1;
     }
-    return 0;
+    return ret;
 }
 
 static void __exit gsm_exit (void)
 {
-    printk(KERN_INFO "GSM: Removing the %s module.\n",name);
-    unregister_dev();
-    gsm_pwr_off();
+    printk(KERN_INFO DEV_DBG" : Removing the %s module.\n",name);
+    unregister_dev();    
 }
 
 module_init(gsm_init);

@@ -9,11 +9,12 @@
 
 #define Tl(a)  ( "silu-"#a)
 
-/*
+
 int main()
 {
-    int fd = open("/dev/gsm0",O_RDWR);
+    int fd = open("/dev/modem",O_RDWR);
     printf("open : fd = %d\n\r",fd);
+    close(fd);
     char rd[150] = {0};
     int rt_rd = 0;
     if (fd >= 3)
@@ -35,7 +36,7 @@ int main()
         printf("close : fd = %d\n",fd);
     }
 }
-*/
+/*
 int main()
 {
     char *a[50] = {0};
@@ -49,3 +50,4 @@ int main()
     printf("%s\n",p);
     printf("t : %s, tsz : %ld\n",Tl(0),strlen(Tl(12)) );
 }
+*/

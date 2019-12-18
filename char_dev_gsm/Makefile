@@ -1,11 +1,11 @@
 
 ifeq ($(ARCH),arm)
 	KDIR := /home/gp/guru/projects/V4/source_codes/linux-at91
-	CROSS_COMPILE = arm-linux-gnueabi-
+export CROSS_COMPILE := arm-linux-gnueabi-
 else
 	KDIR := /lib/modules/$(shell uname -r)/build/
 endif
-TARGET := GSM_LED
+TARGET := LKM_MODEM
 obj-m := ${TARGET}.o #Object name should not be match with the main file name 
 # This causes "missing MODULE_LICENSE()" warnig while building the module
 #${TARGET}-objs := lkm_gsm
