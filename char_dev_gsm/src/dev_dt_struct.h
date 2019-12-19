@@ -15,6 +15,14 @@
 #define MDM_Q   "Quectel"
 #define MDM_T   "Telit"
 
+
+#define DBG_NON 0
+#define DBG_LOW 1
+#define DBG_MED 2
+#define DBG_MAX 3
+
+#define DBG_LVL     DBG_LOW
+
 struct GS_mdm
 {
     char mk[15];
@@ -47,6 +55,10 @@ struct scull_dev
     
 };
 
-extern struct semaphore EGS_sem;
+extern struct EGS_SEM
+{
+    struct semaphore sem;
+}EGS_sem[3];
+
 
 #endif

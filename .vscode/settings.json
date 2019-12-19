@@ -17,6 +17,7 @@
         "termios.h": "c",
         "stdlib.h": "c",
         "pwr_hndl.h": "c",
-        "dev_dt_struct.h": "c"
+        "dev_dt_struct.h": "c",
+        "errno.h": "c"
     }
 }

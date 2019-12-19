@@ -1,5 +1,5 @@
 
-Device write rules for /dev/gsm0
+Device write rules for /dev/modem
 
 ---- Format : 1 -----------
 rbt=quectel,4,0

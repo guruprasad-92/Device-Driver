@@ -42,17 +42,23 @@ struct file_operations gsm_dev_fops =
 int register_dev(void)
 {
     int i=0;
+#if (DBG_LVL == DBG_MAX )    
     printk(KERN_NOTICE DEV_DBG" : In register_dev().\n");
+#endif
         /* Get the mazor and minor number */
     sts_major = alloc_chrdev_region(&major,first_minor,GSM_BANK,DEV_NAME);
     if (sts_major != 0)
     {
+        #if (DBG_LVL >= DBG_LOW)
         printk(KERN_ERR DEV_DBG" : Unable to get major number.\n");
+        #endif
         return -1;
     }
     else
     {
-        printk(KERN_INFO DEV_DBG" : Major number = %d\n",MAJOR(major));
+        #if (DBG_LVL >= DBG_MAX)
+        printk(KERN_WARNING DEV_DBG" : Major number = %d\n",MAJOR(major));
+        #endif
 
         gsm_class = class_create(THIS_MODULE, CLASS);
         
@@ -61,12 +67,16 @@ int register_dev(void)
             cdev_init(&gsm_dev[i], &gsm_dev_fops); // return void
             cur_dev[i] = MKDEV( MAJOR(major), MINOR( major+1 ) );
 
-            sema_init(&EGS_sem,1);
+            sema_init(&(EGS_sem[0].sem),1);
+            sema_init(&(EGS_sem[1].sem),1);
+            sema_init(&(EGS_sem[2].sem),1);
 
             rt_cdev_add = cdev_add(&gsm_dev[i], cur_dev[i], 1);
             if(rt_cdev_add < 0)
             {
-                printk(KERN_ERR DEV_DBG" : Unable to add the device.\n");
+                
+                printk(KERN_ERR DEV_DBG" : Unable to register the device.\n");
+                
                 return rt_cdev_add;
             }
             else
@@ -74,7 +84,8 @@ int register_dev(void)
                 
                 //device_create(gsm_class, NULL, cur_dev[i], NULL, DEV_NAME "%d",i); // We have changed the name gsm(i) to modem.
                 device_create(gsm_class, NULL, cur_dev[i], NULL, DEV_NAME);
-                printk(KERN_INFO DEV_DBG" : The device has been added successfully.\n");
+                
+                printk(KERN_WARNING DEV_DBG" : Registered successfully.\n");               
                 
             }
         //}
@@ -83,27 +94,19 @@ int register_dev(void)
 }
 
 void unregister_dev(void)
-{
-    //printk(KERN_NOTICE DEV_DBG" : In unregister_dev().\n");
+{    
     if(sts_major == 0)
     {
-        //printk(KERN_NOTICE DEV_DBG" : sts_major = 0.\n");
-        gsm_pwr_off();
-        gsm_free_gpio();
-        //printk(KERN_NOTICE DEV_DBG" : gpio pins have been removed.\n");
-        
+        if(mdm_sts())
+            gsm_pwr_off();
+        gsm_free_gpio();        
+
         device_destroy(gsm_class,cur_dev[0]);
-        //printk(KERN_NOTICE DEV_DBG" : device_destroy(gsm_class). \n");
-        
         class_destroy(gsm_class);
-        //printk(KERN_NOTICE DEV_DBG" : class_destroy(gsm_class). \n");
-        
         unregister_chrdev_region(major,GSM_BANK);
-        //printk(KERN_NOTICE DEV_DBG" : unregister_chrdev_region(major). \n");
-
         cdev_del(gsm_dev); //cdev_del(&gsm_dev[i]); // Here we were passing i=1. which is invalid
-        //printk(KERN_NOTICE DEV_DBG" : cdev_del(gsm_dev).\n");
-
-        printk(KERN_INFO DEV_DBG" : The device has ben removed\n");
+        #if (DBG_LVL >= DBG_LOW)
+        printk(KERN_WARNING DEV_DBG" : Removed successfully\n");
+        #endif
     }
 }

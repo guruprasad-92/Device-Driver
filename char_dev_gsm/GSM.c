@@ -14,6 +14,7 @@
 
 #include "src/device/device.h"
 #include "src/file_ops/file_ops.h"
+#include "src/dev_dt_struct.h"
 
 
 MODULE_LICENSE("GPL");
@@ -31,33 +32,41 @@ MODULE_PARM_DESC(name, "The name to display in /var/log/kern.log");  ///< parame
     ----------------------------------------------------------------------------
 */
 
+static void __exit gsm_exit (void)
+{
+    #if (DBG_LVL >= DBG_LOW)
+    printk(KERN_INFO DEV_DBG" : Removing ...\n");
+    #endif
+    unregister_dev();    
+}
+
 static int __init gsm_init (void)
 {
     int ret = -1;
-    printk(KERN_INFO DEV_DBG" : Initialising the %s module.\n", name);    
+
+    printk(KERN_INFO DEV_DBG" : Initialising... .. .\n");    
+
     if(register_dev() >= 0)
     {
-        if (mdm_init() == 0)
+        printk(KERN_INFO DEV_DBG" : Performing I/O operations.\n");
+        ret = mdm_io_init();
+        if (ret == 1)
         {
+            printk(KERN_INFO DEV_DBG" : Added successfully\n");
             ret = 0;
         }
         else
-        {
-            printk(KERN_ERR DEV_DBG" : Could not initialise the modem.\n");
+        {            
+            printk(KERN_ERR DEV_DBG" : Could not initialise <Error in I/O>.\n");
+            gsm_exit();
             ret = -EIO;
         }
     }
     else
     {
-        ret = -1;
+        ret = -EBUSY;
     }
     return ret;
-}
-
-static void __exit gsm_exit (void)
-{
-    printk(KERN_INFO DEV_DBG" : Removing the %s module.\n",name);
-    unregister_dev();    
 }
 
 module_init(gsm_init);

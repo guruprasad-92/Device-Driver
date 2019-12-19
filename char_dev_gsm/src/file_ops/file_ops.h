@@ -23,6 +23,7 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
 int scull_open(struct inode *inode, struct file *filp);
 int scull_release(struct inode *inode, struct file *filp);
 loff_t scull_llseek(struct file *filp, loff_t off, int whence);
-int mdm_init(void);
+int mdm_io_init(void);
+int mdm_sts(void);
 
 #endif
