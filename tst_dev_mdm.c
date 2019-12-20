@@ -311,6 +311,16 @@ int main(void)
         printf("Exiting ... .. .\n");
         exit(0);
     }
+    else
+    {
+        if (tty_set(fd_mdm_com,5))
+        {
+            perror("\ntty_set() failed due to ");
+            printf("\nExiting ... .. .\n");
+            exit(1);
+        }
+    }
+    
 
     if(fd_mdm_com < 3 )
     {

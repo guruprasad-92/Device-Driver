@@ -213,8 +213,10 @@ ssize_t scull_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
         #endif
         return -ERESTARTSYS;
     }
+    /*
     printk(KERN_ERR DEV_DBG" : Test : waiting-5Sec.\n");
     ssleep(5);
+    */
     if( *f_pos > dev->size )
     {
         //printk(KERN_ERR DEV_DBG" : from scull_read(), dev->size = %ld *f_pos = %lld\n",dev->size,*f_pos);
@@ -410,7 +412,21 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count, lof
 loff_t scull_llseek(struct file *filp, loff_t off, int whence)
 {
     struct scull_dev *dev = filp->private_data;
+    
     loff_t newpos;
+
+    printk(KERN_INFO DEV_DBG" : dev->size = %ld\n",dev->size);
+    if (off < 0)
+    {   
+        newpos = -EINVAL;
+        goto ret;
+    }
+    else if (off >= Kbuff_wr_sz)
+    {
+        newpos = -EINVAL;
+    }
+    
+
     switch(whence) 
     {
         case 0: /* SEEK_SET */
@@ -425,9 +441,14 @@ loff_t scull_llseek(struct file *filp, loff_t off, int whence)
         default: /* can't happen */
             return -EINVAL;
     }
-    if ( (newpos < 0) && ( newpos >= Kbuff_wr_sz ) ) 
+    if ( (newpos < 0)  ) 
         return -EINVAL;
+    else if ( newpos >= Kbuff_wr_sz )
+        newpos = Kbuff_wr_sz-1;
+    
     filp->f_pos = newpos;
+    ret : ;
+    
     return newpos;
 }
 

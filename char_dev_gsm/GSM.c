@@ -48,7 +48,7 @@ static int __init gsm_init (void)
 
     if(register_dev() >= 0)
     {
-        printk(KERN_INFO DEV_DBG" : Performing I/O operations.\n");
+        printk(KERN_INFO DEV_DBG" : Performing I/O operations. <This will take some time.>\n");
         ret = mdm_io_init();
         if (ret == 1)
         {
