@@ -1,0 +1,55 @@
+There are two ways for inserting a module in kernel.
+1. Static 
+	In this method, the module can be insterted to the kernel image
+	while compiling the kernel.
+	
+	This way, the source code along with the make file and insertion 
+	mechanism has to be in the path $(TOP_DIR)/drivers/ of the 
+	project kernel. While cross compiling the kernel, the module will
+	be compiled and will be included in the image.
+	
+	This kind of insertion mechanism has to be accepted if, the driver
+	is well tested and prooved with 0% failure rate.
+	___________
+	Procedure :-
+		We have to explore this part and update ourselves by 15th Feb.
+	
+2. Dynamic
+	In dynamic module insertion method, the module can be inserted
+	at run time. And will be placed in the ram. In this method we need
+	the cross compiled binary file of the module.
+	
+	More importantly the module has to be cross compiled individually 
+	with the same cross compiller what has been used for cross compiling
+	the kernel.
+	__________
+	Procedure:-
+		After generating the binary(Ex: mod.ko), copy the file to the 
+		file system. 
+			Ex /.module/exmple_mod.ko
+		For insrting the module,
+			$insmod ./example_mod.ko
+				or
+			$modprobe ./example_mod.ko
+		For removing the module,
+			$rmmod example_mod.ko
+				{This command has to be run after inserting a module 
+				 otherwise, error will occure.}
+	------------------------------
+	Add the module to init script.
+	------------------------------
+		Some specific modules, which has special hardware deependencies,
+		need to be inserted at the booting time. For this kind of operations,
+		Linux has defined startup and shutdown runlelvel.
+		Default run levels are,
+			0 – System halt i.e the system can be safely powered off with no activity.
+			1 – Single user mode.
+			2 – Multiple user mode with no NFS(network file system).
+			3 – Multiple user mode under the command line interface and 
+				not under the graphical user interface.
+			4 – User-definable.
+			5 – Multiple user mode under GUI (graphical user interface) and this is 
+				the standard runlevel for most of the LINUX based systems.
+			6 – Reboot which is used to restart the system.
+	
+	
