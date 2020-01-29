@@ -9,3 +9,8 @@ Update the github project from local project :
     $ git add .
     $ git commit -m "commit message"
     $ git push origin master
+
+Remove a file from git not from the disk.
+	$git rm --cached file_name
+	$git commit --amend -CHEAD
+	$git push
